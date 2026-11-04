@@ -19,6 +19,7 @@ import android.graphics.RectF
 import android.graphics.Shader
 import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.Drawable
+import android.content.res.ColorStateList
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
@@ -209,7 +210,7 @@ class MainActivity : Activity() {
             setTextColor(Color.WHITE)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
             gravity = Gravity.CENTER
-            background = roundBg(0x40FFFFFF, 17)
+            background = roundBg(0x40FFFFFF.toInt(), 17)
             setOnClickListener { openSearch() }
         }
         val pillLp = LinearLayout.LayoutParams(dp(130), dp(34)).apply {
@@ -222,7 +223,7 @@ class MainActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(8), 0, dp(8), 0)
-            background = roundBg(0x40FFFFFF, 30)
+            background = roundBg(0x40FFFFFF.toInt(), 30)
         }
         val dockLp = LinearLayout.LayoutParams(MATCH, dp(86)).apply {
             setMargins(dp(12), 0, dp(12), dp(10))
@@ -244,7 +245,7 @@ class MainActivity : Activity() {
 
     private fun buildSearchOverlay() {
         searchOverlay = FrameLayout(this).apply {
-            setBackgroundColor(0xE6101014)
+            setBackgroundColor(0xE6101014.toInt())
             visibility = View.GONE
             isClickable = true
         }
@@ -256,12 +257,12 @@ class MainActivity : Activity() {
 
         searchField = EditText(this).apply {
             hint = "Search apps"
-            setHintTextColor(0x99FFFFFF)
+            setHintTextColor(0x99FFFFFF.toInt())
             setTextColor(Color.WHITE)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
             isSingleLine = true
             imeOptions = EditorInfo.IME_ACTION_GO
-            background = roundBg(0x33FFFFFF, 14)
+            background = roundBg(0x33FFFFFF.toInt(), 14)
             setPadding(dp(16), 0, dp(16), 0)
             addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence, a: Int, b: Int, c: Int) {}
@@ -348,10 +349,10 @@ class MainActivity : Activity() {
         return item
     }
 
-    private fun gridApps(): List<AppItem> {
+    private fun gridApps(): java.util.List<AppItem> {
         return allApps.filter { a ->
             !dockApps.any { it.pkg == a.pkg }
-        }
+        } as java.util.List<AppItem>
     }
 
     // ------------------------------------------------------------ home grid
@@ -446,7 +447,7 @@ class MainActivity : Activity() {
                 maxLines = 1
                 ellipsize = TextUtils.TruncateAt.END
                 gravity = Gravity.CENTER
-                setShadowLayer(4f, 0f, 1f, 0xAA000000)
+                setShadowLayer(4f, 0f, 1f, 0xAA000000.toInt())
                 setPadding(dp(2), 0, dp(2), 0)
             }
             val lp = LinearLayout.LayoutParams(MATCH, WRAP).apply {
