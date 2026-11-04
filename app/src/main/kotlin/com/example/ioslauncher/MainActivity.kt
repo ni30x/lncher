@@ -210,7 +210,7 @@ class MainActivity : Activity() {
             setTextColor(Color.WHITE)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
             gravity = Gravity.CENTER
-            background = roundBg(0x40FFFFFF.toInt(), 17)
+            setBackground(roundBg(0x40FFFFFF.toInt(), 17))
             setOnClickListener { openSearch() }
         }
         val pillLp = LinearLayout.LayoutParams(dp(130), dp(34)).apply {
@@ -223,7 +223,7 @@ class MainActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(8), 0, dp(8), 0)
-            background = roundBg(0x40FFFFFF.toInt(), 30)
+            setBackground(roundBg(0x40FFFFFF.toInt(), 30))
         }
         val dockLp = LinearLayout.LayoutParams(MATCH, dp(86)).apply {
             setMargins(dp(12), 0, dp(12), dp(10))
@@ -262,7 +262,7 @@ class MainActivity : Activity() {
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
             isSingleLine = true
             imeOptions = EditorInfo.IME_ACTION_GO
-            background = roundBg(0x33FFFFFF.toInt(), 14)
+            setBackground(roundBg(0x33FFFFFF.toInt(), 14))
             setPadding(dp(16), 0, dp(16), 0)
             addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence, a: Int, b: Int, c: Int) {}
@@ -402,9 +402,9 @@ class MainActivity : Activity() {
             val d = View(this)
             val g = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                color = Color.WHITE
+                setColor(Color.WHITE)
             }
-            d.background = g
+            d.setBackground(g)
             val lp = LinearLayout.LayoutParams(dp(7), dp(7)).apply {
                 setMargins(dp(4), 0, dp(4), 0)
             }
@@ -609,12 +609,12 @@ class MainActivity : Activity() {
 
     // ------------------------------------------------------------ helpers
 
-    private fun dp(v: Float): Int = (v * density).roundToInt()
+    private fun dp(v: Int): Int = (v * density).roundToInt()
 
-    private fun roundBg(color: Int, radiusDp: Float): GradientDrawable {
+    private fun roundBg(color: Int, radiusDp: Int): GradientDrawable {
         return GradientDrawable().apply {
-            this.color = color
-            cornerRadius = dp(radiusDp)
+            setColor(color)
+            setCornerRadius(dp(radiusDp).toFloat())
         }
     }
 
