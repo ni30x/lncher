@@ -40,6 +40,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupMenu
@@ -52,6 +53,10 @@ import java.util.HashMap
 import java.util.List
 import java.util.Locale
 import java.util.Map
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToInt
 
 class MainActivity : Activity() {
 
@@ -113,7 +118,7 @@ class MainActivity : Activity() {
             window.statusBarColor = Color.TRANSPARENT
             window.navigationBarColor = Color.TRANSPARENT
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                window.navigationBarContrastEnforced = false
+                window.setNavigationBarContrastEnforced(false)
             }
 
             buildShell()
@@ -187,7 +192,7 @@ class MainActivity : Activity() {
                 val nr = maxOf(3, minOf(8, h / dp(96)))
                 if (nr != rows) {
                     rows = nr
-                    pager.post { rebuildHome() }
+                    post { rebuildHome() }
                 }
             }
         }
@@ -308,7 +313,7 @@ class MainActivity : Activity() {
                 allApps.add(item)
             }
         }
-        Collections.sort(allApps) { a, b -> a.label.compareToIgnoreCase(b.label) }
+        Collections.sort(allApps) { a, b -> a.label.compareTo(b.label, ignoreCase = true) }
         loadDock()
     }
 
@@ -613,13 +618,13 @@ class MainActivity : Activity() {
     }
 
     /** Horizontal pager that always snaps to a full page, like the iOS home screen. */
-    private class SnapScroll(private val activity: MainActivity) : HorizontalScrollView {
+    private class SnapScroll(private val activity: MainActivity) : HorizontalScrollView(activity) {
         private var vt: VelocityTracker? = null
         private var startPage = 0
 
-        constructor(ctx: Context) : this(ctx as MainActivity) {
+        init {
             isHorizontalScrollBarEnabled = false
-            overScrollMode = OVER_SCROLL_NEVER
+            overScrollMode = View.OVER_SCROLL_NEVER
         }
 
         private fun pageNow(): Int = (scrollX / activity.screenW.toFloat()).roundToInt()
