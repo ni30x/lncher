@@ -21,6 +21,7 @@ import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.provider.Settings
@@ -39,7 +40,6 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.FrameLayout
-import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupMenu
@@ -103,30 +103,41 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        pm = packageManager
-        density = resources.displayMetrics.density
-        screenW = resources.displayMetrics.widthPixels
-        iconSize = dp(60)
+        try {
+            pm = packageManager
+            density = resources.displayMetrics.density
+            screenW = resources.displayMetrics.widthPixels
+            iconSize = dp(60)
 
-        window.setDecorFitsSystemWindows(false)
-        window.statusBarColor = Color.TRANSPARENT
-        window.navigationBarColor = Color.TRANSPARENT
-        window.navigationBarContrastEnforced = false
+            window.setDecorFitsSystemWindows(false)
+            window.statusBarColor = Color.TRANSPARENT
+            window.navigationBarColor = Color.TRANSPARENT
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                window.navigationBarContrastEnforced = false
+            }
 
-        buildShell()
-        setContentView(root)
+            buildShell()
+            setContentView(root)
 
-        loadApps()
-        rebuildHome()
+            loadApps()
+            rebuildHome()
 
-        val f = IntentFilter().apply {
-            addAction(Intent.ACTION_PACKAGE_ADDED)
-            addAction(Intent.ACTION_PACKAGE_REMOVED)
-            addAction(Intent.ACTION_PACKAGE_CHANGED)
-            addAction(Intent.ACTION_PACKAGE_REPLACED)
-            addDataScheme("package")
+            val f = IntentFilter().apply {
+                addAction(Intent.ACTION_PACKAGE_ADDED)
+                addAction(Intent.ACTION_PACKAGE_REMOVED)
+                addAction(Intent.ACTION_PACKAGE_CHANGED)
+                addAction(Intent.ACTION_PACKAGE_REPLACED)
+                addDataScheme("package")
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(pkgReceiver, f, Context.RECEIVER_EXPORTED)
+            } else {
+                registerReceiver(pkgReceiver, f)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Launcher initialization failed: ${e.message}", Toast.LENGTH_LONG).show()
         }
-        registerReceiver(pkgReceiver, f, Context.RECEIVER_EXPORTED)
     }
 
     override fun onDestroy() {
@@ -141,16 +152,16 @@ class MainActivity : Activity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         // Home button pressed while launcher is already visible
-        if (searchOverlay.visibility == View.VISIBLE) {
+        if (::searchOverlay.isInitialized && searchOverlay.visibility == View.VISIBLE) {
             closeSearch()
-        } else if (currentPage != 0) {
+        } else if (::pager.isInitialized && currentPage != 0) {
             pager.snapTo(0)
         }
     }
 
     @Suppress("DEPRECATION")
     override fun onBackPressed() {
-        if (searchOverlay.visibility == View.VISIBLE) {
+        if (::searchOverlay.isInitialized && searchOverlay.visibility == View.VISIBLE) {
             closeSearch()
         }
         // A launcher never finishes on Back.
@@ -191,7 +202,7 @@ class MainActivity : Activity() {
         val pill = TextView(this).apply {
             text = "Search"
             setTextColor(Color.WHITE)
-            textSize = TypedValue.COMPLEX_UNIT_SP.toFloat(13)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
             gravity = Gravity.CENTER
             background = roundBg(0x40FFFFFF, 17)
             setOnClickListener { openSearch() }
@@ -228,7 +239,7 @@ class MainActivity : Activity() {
 
     private fun buildSearchOverlay() {
         searchOverlay = FrameLayout(this).apply {
-            setBackgroundColor(0xE6101014.toInt())
+            setBackgroundColor(0xE6101014)
             visibility = View.GONE
             isClickable = true
         }
@@ -240,9 +251,9 @@ class MainActivity : Activity() {
 
         searchField = EditText(this).apply {
             hint = "Search apps"
-            setHintTextColor(0x99FFFFFF.toInt())
+            setHintTextColor(0x99FFFFFF)
             setTextColor(Color.WHITE)
-            textSize = TypedValue.COMPLEX_UNIT_SP.toFloat(16)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
             isSingleLine = true
             imeOptions = EditorInfo.IME_ACTION_GO
             background = roundBg(0x33FFFFFF, 14)
@@ -397,7 +408,6 @@ class MainActivity : Activity() {
     }
 
     private fun updateDots(page: Int) {
-        if (dotsRow == null) return
         for (i in 0 until dotsRow.childCount) {
             dotsRow.getChildAt(i).alpha = if (i == page) 1f else 0.4f
         }
@@ -427,11 +437,11 @@ class MainActivity : Activity() {
             val tv = TextView(this).apply {
                 text = item.label
                 setTextColor(Color.WHITE)
-                textSize = TypedValue.COMPLEX_UNIT_SP.toFloat(11)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
                 maxLines = 1
                 ellipsize = TextUtils.TruncateAt.END
                 gravity = Gravity.CENTER
-                setShadowLayer(4f, 0f, 1f, 0xAA000000.toInt())
+                setShadowLayer(4f, 0f, 1f, 0xAA000000)
                 setPadding(dp(2), 0, dp(2), 0)
             }
             val lp = LinearLayout.LayoutParams(MATCH, WRAP).apply {
@@ -463,7 +473,7 @@ class MainActivity : Activity() {
     // ------------------------------------------------------------ actions
 
     private fun launch(item: AppItem, from: View) {
-        if (searchOverlay.visibility == View.VISIBLE) closeSearch()
+        if (::searchOverlay.isInitialized && searchOverlay.visibility == View.VISIBLE) closeSearch()
         val i = Intent(item.intent!!).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
         }
@@ -603,23 +613,23 @@ class MainActivity : Activity() {
     }
 
     /** Horizontal pager that always snaps to a full page, like the iOS home screen. */
-    private inner class SnapScroll : HorizontalScrollView {
+    private class SnapScroll(private val activity: MainActivity) : HorizontalScrollView {
         private var vt: VelocityTracker? = null
         private var startPage = 0
 
-        constructor(ctx: Context) : super(ctx) {
+        constructor(ctx: Context) : this(ctx as MainActivity) {
             isHorizontalScrollBarEnabled = false
             overScrollMode = OVER_SCROLL_NEVER
         }
 
-        private fun pageNow(): Int = (scrollX / screenW.toFloat()).roundToInt()
+        private fun pageNow(): Int = (scrollX / activity.screenW.toFloat()).roundToInt()
 
         fun snapTo(page: Int) {
-            val max = maxOf(0, pagesRow.childCount - 1)
+            val max = maxOf(0, activity.pagesRow.childCount - 1)
             val t = maxOf(0, minOf(max, page))
-            currentPage = t
-            updateDots(t)
-            smoothScrollTo(t * screenW, 0)
+            activity.currentPage = t
+            activity.updateDots(t)
+            smoothScrollTo(t * activity.screenW, 0)
         }
 
         override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
@@ -656,7 +666,7 @@ class MainActivity : Activity() {
 
         override fun onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
             super.onScrollChanged(l, t, oldl, oldt)
-            updateDots((l / screenW.toFloat()).roundToInt())
+            activity.updateDots((l / activity.screenW.toFloat()).roundToInt())
         }
     }
 }
